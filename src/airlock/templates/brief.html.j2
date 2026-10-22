@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Airlock morning brief</title>
+  <style>
+    :root { --ink: #1a1a1a; --muted: #6b7280; --line: #e5e7eb; --danger: #b91c1c; --warn: #b45309; --ok: #166534; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: var(--ink); background: #fff; }
+    main { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    h1 { font-size: 1.6rem; margin: 0 0 0.25rem; }
+    h2 { font-size: 1.1rem; margin: 2.25rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--line); }
+    .lede { color: var(--muted); margin: 0 0 1.5rem; }
+    .item { border: 1px solid var(--line); border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.9rem; }
+    .item .meta { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.5rem; }
+    .sender { font-weight: 600; }
+    .badge { font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+    .badge.suspicious { color: var(--danger); border-color: var(--danger); }
+    .badge.verified_known { color: var(--ok); border-color: var(--ok); }
+    .badge.known_unverified { color: var(--warn); border-color: var(--warn); }
+    blockquote.untrusted { margin: 0.5rem 0 0; padding: 0.5rem 0.75rem; border-left: 3px solid var(--muted); color: var(--muted); font-style: italic; }
+    blockquote.untrusted::before { content: "untrusted quote"; display: block; font-style: normal; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 0.25rem; }
+    .field { font-size: 0.9rem; color: var(--ink); margin-top: 0.4rem; }
+    .reasons { font-size: 0.78rem; color: var(--muted); }
+    .empty { color: var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Airlock morning brief</h1>
+  <p class="lede">Generated locally from your inbox overnight. Quotes below are untrusted text shown only to you.</p>
+
+  {% set sections = [("needs_you", "Needs you"), ("deadlines_amounts", "Deadlines and amounts"), ("review", "Review carefully"), ("fyi", "FYI")] %}
+  {% for key, title in sections %}
+    {% set group = items | selectattr("section", "equalto", key) | list %}
+    <h2>{{ title }}</h2>
+    {% if not group %}
+      <p class="empty">Nothing here.</p>
+    {% endif %}
+    {% for item in group %}
+      <section class="item">
+        <div class="meta">
+          <span class="sender">{{ item.sender }}</span>
+          <span class="badge {{ item.trust.value }}">{{ item.trust.value }}</span>
+          {% if item.category %}<span class="badge">{{ item.category.value }}</span>{% endif %}
+          {% if item.urgency %}<span class="badge">{{ item.urgency.value }}</span>{% endif %}
+          {% if item.request_type %}<span class="badge">{{ item.request_type.value }}</span>{% endif %}
+        </div>
+        {% if item.quotes %}
+          {% for quote in item.quotes %}
+            <blockquote class="untrusted">{{ quote | defang }}</blockquote>
+          {% endfor %}
+        {% endif %}
+        {% if item.deadline %}
+          <div class="field">Deadline: {{ item.deadline.strftime("%Y-%m-%d %H:%M") }}</div>
+        {% endif %}
+        {% if item.amount %}
+          <div class="field">Amount: {{ item.amount.value }} {{ item.amount.currency or "" }}</div>
+        {% endif %}
+        <div class="reasons">{{ item.trust_reasons | map(attribute="value") | join(", ") }}</div>
+      </section>
+    {% endfor %}
+  {% endfor %}
+</main>
+</body>
+</html>

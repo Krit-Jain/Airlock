@@ -7,20 +7,16 @@ Processing is resumable because every message is keyed by a content hash.
 
 from __future__ import annotations
 
-import hashlib
+import functools
 import json
 import sqlite3
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .models import Message, ResolvedAmount, ResolvedRecord, TrustLabel, TrustReason
+from .models import Message, ResolvedAmount, ResolvedRecord, TrustLabel, TrustReason, message_id_for
 from .schema import Category, RequestType, Urgency
-
-
-def message_id_for(source: str, sender: str, raw_text: str) -> str:
-    digest = hashlib.sha256(f"{source}\x00{sender}\x00{raw_text}".encode("utf-8")).hexdigest()
-    return digest[:16]
 
 
 def _iso(dt: datetime | None) -> str | None:
@@ -31,10 +27,20 @@ def _parse_iso(value: str | None) -> datetime | None:
     return datetime.fromisoformat(value) if value else None
 
 
+def _locked(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 class Store:
     def __init__(self, path: str | Path):
         self.path = str(path)
-        self._conn = sqlite3.connect(self.path)
+        self._lock = threading.Lock()
+        self._conn = sqlite3.connect(self.path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._init()
 
@@ -74,17 +80,69 @@ class Store:
                 status TEXT NOT NULL DEFAULT 'pending',
                 created_at TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS staged (
+                id TEXT PRIMARY KEY,
+                source TEXT NOT NULL,
+                sender TEXT NOT NULL,
+                ts TEXT,
+                raw_text TEXT NOT NULL,
+                headers TEXT NOT NULL
+            );
             """
         )
         self._conn.commit()
 
+    @_locked
     def close(self) -> None:
         self._conn.close()
 
+    @_locked
     def is_processed(self, message_id: str) -> bool:
         row = self._conn.execute("SELECT 1 FROM messages WHERE id = ?", (message_id,)).fetchone()
         return row is not None
 
+    @_locked
+    def stage_messages(self, messages: list[Message]) -> None:
+        for message in messages:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO staged (id, source, sender, ts, raw_text, headers) VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    message.id,
+                    message.source,
+                    message.sender,
+                    _iso(message.ts),
+                    message.raw_text,
+                    json.dumps(message.headers),
+                ),
+            )
+        self._conn.commit()
+
+    @_locked
+    def staged_count(self) -> int:
+        return self._conn.execute("SELECT COUNT(*) FROM staged").fetchone()[0]
+
+    @_locked
+    def staged_messages(self, limit: int | None = None) -> list[Message]:
+        query = "SELECT * FROM staged"
+        params: list[Any] = []
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(limit)
+        rows = self._conn.execute(query, params).fetchall()
+        return [
+            Message(
+                id=row["id"],
+                source=row["source"],
+                sender=row["sender"],
+                ts=_parse_iso(row["ts"]),
+                raw_text=row["raw_text"],
+                headers=json.loads(row["headers"]),
+            )
+            for row in rows
+        ]
+
+    @_locked
     def save_message(
         self,
         message: Message,
@@ -133,12 +191,14 @@ class Store:
         )
         self._conn.commit()
 
+    @_locked
     def get_record(self, message_id: str) -> ResolvedRecord | None:
         row = self._conn.execute("SELECT * FROM messages WHERE id = ?", (message_id,)).fetchone()
         if row is None:
             return None
         return self._row_to_record(row)
 
+    @_locked
     def list_records(
         self,
         trust: TrustLabel | None = None,
@@ -178,16 +238,19 @@ class Store:
             unparsed=bool(row["unparsed"]),
         )
 
+    @_locked
     def get_brief_data(self, message_id: str) -> dict[str, Any] | None:
         row = self._conn.execute("SELECT * FROM messages WHERE id = ?", (message_id,)).fetchone()
         if row is None:
             return None
         return dict(row)
 
+    @_locked
     def all_brief_rows(self) -> list[dict[str, Any]]:
         rows = self._conn.execute("SELECT * FROM messages ORDER BY ts").fetchall()
         return [dict(row) for row in rows]
 
+    @_locked
     def create_proposal(self, message_id: str, kind: str) -> int:
         cursor = self._conn.execute(
             "INSERT INTO proposals (message_id, kind, status, created_at) VALUES (?, ?, 'pending', ?)",
@@ -196,10 +259,12 @@ class Store:
         self._conn.commit()
         return cursor.lastrowid
 
+    @_locked
     def list_proposals(self) -> list[dict[str, Any]]:
         rows = self._conn.execute("SELECT * FROM proposals ORDER BY id").fetchall()
         return [dict(row) for row in rows]
 
+    @_locked
     def approve_proposal(self, proposal_id: int) -> bool:
         cursor = self._conn.execute(
             "UPDATE proposals SET status = 'approved' WHERE id = ? AND status = 'pending'",

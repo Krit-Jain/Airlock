@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -100,3 +101,9 @@ class BriefItem:
     amount: ResolvedAmount | None
     ts: datetime | None
     section: str = "fyi"
+
+
+def message_id_for(source: str, sender: str, raw_text: str) -> str:
+    """Stable content-derived id used for resumable processing."""
+    digest = hashlib.sha256(f"{source}\x00{sender}\x00{raw_text}".encode("utf-8")).hexdigest()
+    return digest[:16]
