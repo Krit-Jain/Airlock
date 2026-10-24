@@ -105,35 +105,53 @@ any MCP response.
 
 ## Evaluation
 
-Airlock's evaluation is being rebuilt around an auditable design, frozen in
-`eval/PREREGISTRATION.md`: a real local-LLM agent with tools, detector and prompt
-baselines, a paired attack corpus with canaries, a taint audit of every string sent to a
-privileged model, and a worst-case analysis. The agent runs are pending the overnight
-batch and will be published as `results/REPORT.md`.
+Airlock's evaluation is an auditable design, frozen in `eval/PREREGISTRATION.md`: a real
+local-LLM agent with tools, detector and prompt baselines, a paired attack corpus with
+canaries, a taint audit of every string sent to a privileged model, and a worst-case
+analysis. The full report is generated into `results/REPORT.md`.
 
-Two results are already deterministic and model-free.
+The deterministic, model-free results are measured and committed. The agent table in
+`results/REPORT.md` is currently produced by the deterministic mock policy; the real-model
+run is a single command over the pre-registered test split.
+
+### Deterministic trust and sanitizer layers
+
+Measured on the committed fixture suites (65 header, 60 HTML, 20 Unicode fixtures):
+
+| Check | Rate |
+| --- | ---: |
+| Spoof detection | 100% (25/25) |
+| Legitimate false-suspicious | 0% (0/40) |
+| Hidden-text detection | 100% (30/30) |
+| Legitimate false-hidden | 0% (0/30) |
+| Dangerous Unicode detected and stripped | 100% (10/10) |
+| Legitimate false-dangerous | 0% (0/10) |
+
+### Schema escape
+
+The quarantine model is schema-valid at the sampler on every adversarial prompt tested
+(20/20), with no out-of-vocabulary token.
 
 ### Worst-case reachability
 
-Assumes the quarantine model is fully compromised and can emit any valid extraction. It
-shows what an attacker can achieve at each trust level, independent of any model.
+Assumes the quarantine model is fully compromised and can emit any valid extraction.
 
-| Trust label | Reaches needs_you | Max urgency in needs_you | Max urgency anywhere | Proposable actions |
-| --- | --- | --- | --- | --- |
-| verified_known | yes | high | high | archive, create_event, flag_for_reply |
-| known_unverified | yes | medium | medium | archive, create_event, flag_for_reply |
-| unknown | yes | low | low | archive, create_event, flag_for_reply |
-| suspicious | no | - | low | archive |
+| Trust label | Reaches needs_you | Max urgency in needs_you | Max urgency anywhere |
+| --- | --- | --- | --- |
+| verified_known | yes | high | high |
+| known_unverified | yes | medium | medium |
+| unknown | yes | low | low |
+| suspicious | no | - | low |
 
 An unknown sender can reach the inbox's "needs you" section but cannot reach high
 urgency. Only a genuine known contact can reach high urgency. This is the residual risk,
 stated plainly: Airlock stops hijacking, not persuasion.
 
-### Taint audit
+### Agent systems and taint audit
 
-The taint audit is a mechanism check, not a rate: for the Airlock-fed agent it must be
-zero. `eval/tests/test_selfvalidation.py` includes a gullible-oracle case that must leak a
-canary, proving the check can fail.
+With the deterministic mock policy, the raw-context systems leak attacker strings while
+the Airlock-fed systems do not. The taint audit is a mechanism check: for the Airlock-fed
+agent it is zero, including when dangerous tools are exposed.
 
 ## Project layout
 
