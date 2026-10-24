@@ -139,9 +139,9 @@ def _email_signals(message: Message, sanitized: SanitizeResult, config: SignalCo
     elif has_auth and auth_pass:
         reasons.append(TrustReason.AUTH_PASS)
 
-    if reply_to_addr and from_domain != _domain(reply_to_addr):
-        reasons.append(TrustReason.DOMAIN_MISMATCH)
-    if return_path_addr and from_domain != _domain(return_path_addr):
+    reply_to_mismatch = bool(reply_to_addr) and from_domain != _domain(reply_to_addr)
+    return_path_mismatch = bool(return_path_addr) and from_domain != _domain(return_path_addr)
+    if reply_to_mismatch or return_path_mismatch:
         reasons.append(TrustReason.DOMAIN_MISMATCH)
 
     if _display_name_spoof(from_display, from_addr):
@@ -171,7 +171,7 @@ def _email_signals(message: Message, sanitized: SanitizeResult, config: SignalCo
     else:
         reasons.append(TrustReason.FIRST_TIME_SENDER)
 
-    strong_suspicion = any(
+    strong_suspicion = reply_to_mismatch or any(
         r in reasons
         for r in (
             TrustReason.HIDDEN_TEXT,
