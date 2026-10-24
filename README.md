@@ -153,6 +153,20 @@ With the deterministic mock policy, the raw-context systems leak attacker string
 the Airlock-fed systems do not. The taint audit is a mechanism check: for the Airlock-fed
 agent it is zero, including when dangerous tools are exposed.
 
+### Running the full evaluation
+
+```bash
+uv run airlock eval                 # full test split with the real model
+uv run airlock eval --limit 40      # fast smoke run
+uv run airlock eval --skip calibration,fixtures,schema,cross
+```
+
+Every expensive call is cached under `results/cache/`, so an interrupted run resumes where
+it stopped. On a 4 GB-VRAM laptop the full test split (221 attacks across six systems)
+takes roughly four to six hours; the calibration gate and a smoke run take minutes. The
+agent must pass the calibration gate on dev before the attack run, and `gemma3:4b` passes
+at task-success F1 0.68.
+
 ## Project layout
 
 ```text

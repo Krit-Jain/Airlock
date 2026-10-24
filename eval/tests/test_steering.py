@@ -15,8 +15,8 @@ def test_steering_flags_have_all_metrics():
         assert metric in flags
 
 
-def test_steering_eval_reports_by_sender_variant():
-    summary = run_steering_eval(limit=8)
+def test_steering_eval_reports_by_sender_variant(tmp_path):
+    summary = run_steering_eval(limit=8, out_dir=tmp_path)
     assert summary["metadata"]["attacks"] == 8
     assert summary["by_sender_variant"]
     for stats in summary["by_sender_variant"].values():

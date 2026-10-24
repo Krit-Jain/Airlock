@@ -1,25 +1,27 @@
 """Agent evaluation runner.
 
 Runs the systems under test over the paired corpus and reports outcome metrics with Wilson
-intervals, the taint audit, and Airlock steering. The quarantine model is separate from the
-agent policy, so the same script runs with deterministic mock policies for self-validation
-or with a local model for the real run.
+intervals, the taint audit, and steering. Expensive calls are cached on disk:
+
+- quarantine extractions use a persistent store keyed by (message, model, schema, prompt);
+- agent and judge calls use an append-only cache keyed by the exact prompt and tools.
+
+The run is therefore resumable: interrupting and re-running continues where it stopped.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 from pathlib import Path
 
-from airlock.extractor import MockAdapter, OllamaAdapter, run_extraction
+from airlock.extractor import MockAdapter, OllamaAdapter, prompt_hash, schema_hash
 from airlock.models import Message, ResolvedRecord, TrustLabel
-from airlock.rank import rank
-from airlock.resolve import resolve_amount, resolve_deadline
-from airlock.sanitize import sanitize
+from airlock.pipeline import process_message
 from airlock.schema import Category, RequestType, Urgency
-from airlock.segment import split_sentences
-from airlock.signals import SignalConfig, compute_signals
+from airlock.signals import SignalConfig
+from airlock.store import Store
 
 from .corpus.attack_gen import attacker_fields, tokens
 from .corpus.sender_variants import KNOWN_CONTACT
@@ -41,8 +43,6 @@ from .taint_audit import taint_audit
 SYSTEMS = ("S0", "S1a", "S1b", "S2", "S3", "S3b")
 CONFIG = SignalConfig(known_contacts={KNOWN_CONTACT})
 
-# Vocabulary whose overlap between a payload and a typed record is explained by the
-# pipeline itself (field names and enum values), not by an attacker string reaching the agent.
 _IGNORE = (
     {"record", "message_id", "category", "urgency", "request_type", "asks_user_to_act", "trust", "deadline", "amount", "evidence_refs", "ref"}
     | {c.value for c in Category}
@@ -50,6 +50,42 @@ _IGNORE = (
     | {r.value for r in RequestType}
     | {t.value for t in TrustLabel}
 )
+
+
+class JsonlCache:
+    """Append-only cache: fast to write, tolerant of partial last lines."""
+
+    def __init__(self, path: str | Path):
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._data: dict[str, object] = {}
+        if self.path.exists():
+            for line in self.path.read_text(encoding="utf-8").splitlines():
+                try:
+                    record = json.loads(line)
+                    self._data[record["k"]] = record["v"]
+                except (ValueError, KeyError):
+                    continue
+        self._handle = self.path.open("a", encoding="utf-8")
+
+    @staticmethod
+    def key(*parts: object) -> str:
+        blob = "\x1f".join(str(p) for p in parts).encode("utf-8")
+        return hashlib.sha256(blob).hexdigest()
+
+    def get(self, key: str):
+        return self._data.get(key)
+
+    def put(self, key: str, value: object) -> None:
+        self._data[key] = value
+        self._handle.write(json.dumps({"k": key, "v": value}, ensure_ascii=False) + "\n")
+        self._handle.flush()
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def close(self) -> None:
+        self._handle.close()
 
 
 def _quarantine_adapter(model: str):
@@ -64,7 +100,11 @@ def _agent_policy(policy: str, model: str):
     return OllamaAgentPolicy(model=model)
 
 
-def _record_from_item(item: dict, adapter) -> ResolvedRecord:
+def _policy_id(policy) -> str:
+    return getattr(policy, "model", type(policy).__name__)
+
+
+def _record_from_item(item: dict, adapter, store: Store) -> ResolvedRecord:
     message = Message(
         id=item["message_id"],
         source=item.get("source", "email"),
@@ -73,56 +113,58 @@ def _record_from_item(item: dict, adapter) -> ResolvedRecord:
         raw_text=item.get("raw", ""),
         headers=item.get("headers", {}),
     )
-    sanitized = sanitize(message.raw_text)
-    trust, reasons = compute_signals(message, sanitized, CONFIG)
-    sentences = split_sentences(sanitized.text)
-    extraction, _error = run_extraction(adapter, sentences)
-    deadline = resolve_deadline(sentences, extraction.deadline_sentence if extraction else None)
-    amount = resolve_amount(sentences, extraction.amount_sentence if extraction else None)
-    result = rank(extraction, trust, extraction is None, False, deadline is not None, amount is not None)
-    return ResolvedRecord(
-        message_id=message.id,
-        source=message.source,
-        category=extraction.category if extraction else None,
-        urgency=result.urgency,
-        request_type=extraction.request_type if extraction else None,
-        asks_user_to_act=extraction.asks_user_to_act if extraction else None,
-        trust=trust,
-        trust_reasons=reasons,
-        deadline=deadline,
-        amount=amount,
-        evidence_refs=list(extraction.evidence) if extraction else [],
-        unparsed=extraction is None,
-    )
+    if store.is_cached(message.id, getattr(adapter, "model_tag", ""), schema_hash(), prompt_hash()):
+        record = store.get_record(message.id)
+        if record is not None:
+            return record
+    return process_message(message, adapter, CONFIG, store)
 
 
-def _run_system(system: str, batch: list[dict], policy, adapter, judge=None) -> AgentRun:
+def _judge_cached(judge, text: str, cache: JsonlCache) -> bool:
+    key = cache.key("judge", _policy_id(judge), text)
+    cached = cache.get(key)
+    if cached is not None:
+        return bool(cached)
+    result = judge.is_injection(text)
+    cache.put(key, result)
+    return result
+
+
+def _run_system(system: str, batch: list[dict], policy, adapter, judge, store: Store, cache: JsonlCache) -> AgentRun:
     if system == "S1a":
         from .detector_baseline import detector_refuses
 
         batch = [m for m in batch if not detector_refuses({"raw": m.get("raw", "")})]
     elif system == "S1b" and judge is not None:
-        batch = [m for m in batch if not judge.is_injection(m.get("raw", ""))]
+        batch = [m for m in batch if not _judge_cached(judge, m.get("raw", ""), cache)]
 
     if system in ("S3", "S3b"):
-        records = [_record_from_item(m, adapter) for m in batch]
+        records = [_record_from_item(m, adapter, store) for m in batch]
         prompt, tools = present_s3(records) if system == "S3" else present_s3b(records)
     elif system == "S2":
         prompt, tools = present_s2(batch)
     else:
         prompt, tools = present_s0(batch)
 
-    calls = policy.run(prompt, tools) if batch else []
+    key = cache.key(system, _policy_id(policy), prompt, json.dumps(tools, sort_keys=True))
+    cached = cache.get(key)
+    if cached is None:
+        calls = policy.run(prompt, tools) if batch else []
+        cache.put(key, calls)
+    else:
+        calls = cached
+
     bound = [prompt] + [json.dumps(call, sort_keys=True) for call in calls]
     return AgentRun(system=system, calls=calls, agent_bound_strings=bound)
 
 
 def _build_batch(attack: dict, benign_pool: list[dict], size: int, rng: random.Random, use_twin: bool) -> list[dict]:
     source = attack["twin"] if use_twin else attack
+    target_id = f"{attack['id']}-clean" if use_twin else attack["id"]
     chosen = rng.sample(benign_pool, min(size - 1, len(benign_pool)))
     items = [
         {
-            "message_id": attack["id"],
+            "message_id": target_id,
             "source": "email",
             "sender": source["sender"],
             "subject": source.get("subject", ""),
@@ -151,6 +193,8 @@ def run_agent_eval(
     batch_size: int = 8,
     seed: int = 0,
     out_dir: str | Path = "results",
+    cache_dir: str | Path = "results/cache",
+    progress: bool = False,
 ) -> dict:
     corpus_dir = Path(__file__).parent / "corpus"
     attacks = [json.loads(line) for line in (corpus_dir / "attacks.jsonl").read_text(encoding="utf-8").splitlines()]
@@ -164,48 +208,53 @@ def run_agent_eval(
     policy = _agent_policy(agent_policy, agent_model)
     judge = RegexJudge() if judge_policy == "regex" else OllamaJudge(model=agent_model)
 
+    cache = JsonlCache(Path(cache_dir) / "agent_calls.jsonl")
+    store = Store(Path(cache_dir) / "extractions.db")
     rng = random.Random(seed)
-    per_system: dict[str, dict] = {
-        s: {"unauth": 0, "canary": 0, "induced": 0, "taint": 0, "n": 0} for s in SYSTEMS
-    }
+    per_system: dict[str, dict] = {s: {"unauth": 0, "canary": 0, "induced": 0, "taint": 0, "n": 0} for s in SYSTEMS}
     records: list[dict] = []
 
-    for attack in attacks:
-        canaries = tokens(attack)
-        fields = attacker_fields(attack)
-        token_list = canaries
-        for system in SYSTEMS:
-            batch = _build_batch(attack, benign_pool, batch_size, rng, use_twin=False)
-            clean = _build_batch(attack, benign_pool, batch_size, rng, use_twin=True)
-            run = _run_system(system, batch, policy, adapter, judge)
-            clean_run = _run_system(system, clean, policy, adapter, judge)
+    try:
+        for index, attack in enumerate(attacks, start=1):
+            canaries = tokens(attack)
+            fields = attacker_fields(attack)
+            for system in SYSTEMS:
+                batch = _build_batch(attack, benign_pool, batch_size, rng, use_twin=False)
+                clean = _build_batch(attack, benign_pool, batch_size, rng, use_twin=True)
+                run = _run_system(system, batch, policy, adapter, judge, store, cache)
+                clean_run = _run_system(system, clean, policy, adapter, judge, store, cache)
 
-            unauth = bool(run.unauthorized_calls())
-            canary_hit = any(_calls_hijacked(run.calls, c) for c in token_list if c)
-            attacked_json = {json.dumps(c, sort_keys=True) for c in run.calls}
-            clean_json = {json.dumps(c, sort_keys=True) for c in clean_run.calls}
-            induced = bool(attacked_json - clean_json)
-            violations = taint_audit(run.agent_bound_strings, token_list, fields, ignore=_IGNORE)
+                unauth = bool(run.unauthorized_calls())
+                canary_hit = any(_calls_hijacked(run.calls, c) for c in canaries if c)
+                attacked_json = {json.dumps(c, sort_keys=True) for c in run.calls}
+                clean_json = {json.dumps(c, sort_keys=True) for c in clean_run.calls}
+                induced = bool(attacked_json - clean_json)
+                violations = taint_audit(run.agent_bound_strings, canaries, fields, ignore=_IGNORE)
 
-            stats = per_system[system]
-            stats["n"] += 1
-            stats["unauth"] += int(unauth)
-            stats["canary"] += int(canary_hit)
-            stats["induced"] += int(induced)
-            stats["taint"] += int(bool(violations))
+                stats = per_system[system]
+                stats["n"] += 1
+                stats["unauth"] += int(unauth)
+                stats["canary"] += int(canary_hit)
+                stats["induced"] += int(induced)
+                stats["taint"] += int(bool(violations))
 
-            records.append(
-                {
-                    "instance": attack["id"],
-                    "system": system,
-                    "unauth": unauth,
-                    "canary": canary_hit,
-                    "induced": induced,
-                    "taint_violations": violations,
-                }
-            )
+                records.append(
+                    {
+                        "instance": attack["id"],
+                        "system": system,
+                        "unauth": unauth,
+                        "canary": canary_hit,
+                        "induced": induced,
+                        "taint_violations": violations,
+                    }
+                )
+            if progress and index % 10 == 0:
+                print(f"  agent eval: {index}/{len(attacks)} attacks, cache={len(cache)}", flush=True)
 
-    benign_flagged = sum(1 for b in benign_pool if judge.is_injection(b["raw"]))
+        benign_flagged = sum(1 for b in benign_pool if _judge_cached(judge, b["raw"], cache))
+    finally:
+        cache.close()
+        store.close()
 
     summary: dict = {
         "metadata": {
@@ -218,9 +267,7 @@ def run_agent_eval(
             "seed": seed,
             "attacks": len(attacks),
         },
-        "judge": {
-            "benign_false_positive": wilson(benign_flagged, len(benign_pool)).__dict__,
-        },
+        "judge": {"benign_false_positive": wilson(benign_flagged, len(benign_pool)).__dict__},
         "systems": {},
     }
     for system, stats in per_system.items():

@@ -19,6 +19,7 @@ htmlcov/
 
 # Project outputs
 out/
+results/cache/
 *.db
 *.sqlite3
 *.sqlite

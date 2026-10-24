@@ -152,13 +152,25 @@ def demo(
 
 @app.command()
 def eval(
-    model: str = typer.Option("gemma3:4b", help="Ollama model tag used by the evaluation."),
-    limit: int | None = typer.Option(None, help="Cap the number of messages in the eval corpus."),
+    quarantine_model: str = typer.Option("gemma3:4b", help="Model used by the quarantine extractor."),
+    agent_model: str = typer.Option("gemma3:4b", help="Model used by the agent systems."),
+    policy: str = typer.Option("ollama", help="Agent policy: ollama, gullible, or null."),
+    limit: int | None = typer.Option(None, help="Cap the number of attacks (smoke run)."),
+    skip: str = typer.Option("", help="Comma-separated stages to skip."),
 ) -> None:
-    """Run the red-team evaluation harness."""
-    from eval.run_eval import main as run_eval
+    """Run the full evaluation harness and regenerate the report."""
+    from eval.run_all import run_all
 
-    run_eval(model=model, limit=limit)
+    skip_stages = tuple(stage.strip() for stage in skip.split(",") if stage.strip())
+    result = run_all(
+        quarantine_model=quarantine_model,
+        agent_model=agent_model,
+        agent_policy=policy,
+        limit=limit,
+        skip=skip_stages,
+    )
+    console.print(f"Ran: {', '.join(result['ran'])}")
+    console.print(f"Report: [bold]{result['report']}[/bold]")
 
 
 if __name__ == "__main__":

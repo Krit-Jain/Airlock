@@ -25,8 +25,8 @@ def test_typed_record_prompt_contains_no_attacker_text():
     assert tools == PROPOSE_TOOL
 
 
-def test_agent_eval_airlock_systems_are_clean():
-    summary = run_agent_eval(limit=8, agent_policy="gullible")
+def test_agent_eval_airlock_systems_are_clean(tmp_path):
+    summary = run_agent_eval(limit=8, agent_policy="gullible", out_dir=tmp_path, cache_dir=tmp_path / "cache")
     systems = summary["systems"]
 
     # Raw-text systems are exposed by design.
@@ -40,8 +40,8 @@ def test_agent_eval_airlock_systems_are_clean():
         assert systems[system]["asr_unauth"]["point"] == 0.0
 
 
-def test_agent_eval_reports_s1b_judge_and_its_false_positive_rate():
-    summary = run_agent_eval(limit=8, agent_policy="gullible")
+def test_agent_eval_reports_s1b_judge_and_its_false_positive_rate(tmp_path):
+    summary = run_agent_eval(limit=8, agent_policy="gullible", out_dir=tmp_path, cache_dir=tmp_path / "cache")
     assert "S1b" in summary["systems"]
     assert "judge" in summary
     assert summary["judge"]["benign_false_positive"]["n"] > 0
