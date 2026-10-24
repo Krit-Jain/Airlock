@@ -103,24 +103,37 @@ The server exposes three read-only tools over stdio: `list_messages`, `get_messa
 sender strings or quote text. A fuzz test asserts that attacker canaries cannot appear in
 any MCP response.
 
-## Measured results
+## Evaluation
 
-The numbers below are copied from a real run of the evaluation harness on `gemma3:4b`
-(23 messages: 12 benign, 11 attacks). See `results/REPORT.md`.
+Airlock's evaluation is being rebuilt around an auditable design, frozen in
+`eval/PREREGISTRATION.md`: a real local-LLM agent with tools, detector and prompt
+baselines, a paired attack corpus with canaries, a taint audit of every string sent to a
+privileged model, and a worst-case analysis. The agent runs are pending the overnight
+batch and will be published as `results/REPORT.md`.
 
-| Metric | Naive agent | Detector baseline | Airlock |
-| --- | ---: | ---: | ---: |
-| Hijack success rate | 63.6% | 9.1% | 0.0% |
+Two results are already deterministic and model-free.
 
-| Airlock metric | Value |
-| --- | ---: |
-| Manipulation before trust cap | 18.2% |
-| Manipulation after trust cap | 0.0% |
-| Category accuracy (benign) | 83.3% |
-| Request type accuracy (benign) | 66.7% |
-| Urgency accuracy (benign) | 75.0% |
-| Deadline sentence exact match | 100.0% |
-| Amount sentence exact match | 100.0% |
+### Worst-case reachability
+
+Assumes the quarantine model is fully compromised and can emit any valid extraction. It
+shows what an attacker can achieve at each trust level, independent of any model.
+
+| Trust label | Reaches needs_you | Max urgency in needs_you | Max urgency anywhere | Proposable actions |
+| --- | --- | --- | --- | --- |
+| verified_known | yes | high | high | archive, create_event, flag_for_reply |
+| known_unverified | yes | medium | medium | archive, create_event, flag_for_reply |
+| unknown | yes | low | low | archive, create_event, flag_for_reply |
+| suspicious | no | - | low | archive |
+
+An unknown sender can reach the inbox's "needs you" section but cannot reach high
+urgency. Only a genuine known contact can reach high urgency. This is the residual risk,
+stated plainly: Airlock stops hijacking, not persuasion.
+
+### Taint audit
+
+The taint audit is a mechanism check, not a rate: for the Airlock-fed agent it must be
+zero. `eval/tests/test_selfvalidation.py` includes a gullible-oracle case that must leak a
+canary, proving the check can fail.
 
 ## Project layout
 
