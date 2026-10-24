@@ -1,0 +1,6 @@
+From: HDFC Bank <alerts@hdfcbank.com>
+Subject: Statement ready (ref 2-1)
+Authentication-Results: mx.hdfcbank.com; spf=pass dkim=pass dmarc=pass
+Content-Type: text/plain; charset="utf-8"
+
+Hello, this is a routine message ref 2-1.

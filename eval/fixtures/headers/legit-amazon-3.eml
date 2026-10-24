@@ -1,0 +1,6 @@
+From: Amazon <shipment-tracking@amazon.com>
+Subject: Your package shipped (ref 4-3)
+Authentication-Results: mx.amazon.com; spf=pass dkim=pass dmarc=pass
+Content-Type: text/plain; charset="utf-8"
+
+Hello, this is a routine message ref 4-3.

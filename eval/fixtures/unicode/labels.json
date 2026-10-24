@@ -1,0 +1,62 @@
+{
+  "tag-smuggle-0.txt": {
+    "expect_dangerous": true
+  },
+  "tag-smuggle-1.txt": {
+    "expect_dangerous": true
+  },
+  "bidi-override-0.txt": {
+    "expect_dangerous": true
+  },
+  "bidi-override-1.txt": {
+    "expect_dangerous": true
+  },
+  "zwsp-run-0.txt": {
+    "expect_dangerous": true
+  },
+  "zwsp-run-1.txt": {
+    "expect_dangerous": true
+  },
+  "word-joiner-0.txt": {
+    "expect_dangerous": true
+  },
+  "word-joiner-1.txt": {
+    "expect_dangerous": true
+  },
+  "bidi-isolate-0.txt": {
+    "expect_dangerous": true
+  },
+  "bidi-isolate-1.txt": {
+    "expect_dangerous": true
+  },
+  "hindi-0.txt": {
+    "expect_dangerous": false
+  },
+  "hindi-1.txt": {
+    "expect_dangerous": false
+  },
+  "hindi-zwnj-0.txt": {
+    "expect_dangerous": false
+  },
+  "hindi-zwnj-1.txt": {
+    "expect_dangerous": false
+  },
+  "persian-0.txt": {
+    "expect_dangerous": false
+  },
+  "persian-1.txt": {
+    "expect_dangerous": false
+  },
+  "emoji-vs16-0.txt": {
+    "expect_dangerous": false
+  },
+  "emoji-vs16-1.txt": {
+    "expect_dangerous": false
+  },
+  "plain-ascii-0.txt": {
+    "expect_dangerous": false
+  },
+  "plain-ascii-1.txt": {
+    "expect_dangerous": false
+  }
+}

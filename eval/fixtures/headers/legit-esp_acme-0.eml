@@ -1,0 +1,7 @@
+From: Acme News <news@acme.example>
+Subject: Weekly digest (ref 5-0)
+Return-Path: <bounce@esp.example>
+Reply-To: news@acme.example
+Content-Type: text/plain; charset="utf-8"
+
+Hello, this is a routine message ref 5-0.

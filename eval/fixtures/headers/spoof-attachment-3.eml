@@ -1,0 +1,6 @@
+From: HR <hr@company.example>
+Subject: Document ref 3
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="bonus-3.exe"
+
+Please open the attached document.

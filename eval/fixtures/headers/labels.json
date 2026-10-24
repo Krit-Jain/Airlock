@@ -1,0 +1,262 @@
+{
+  "legit-github-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-github-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-github-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-github-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-google-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-google-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-google-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-google-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-hdfc-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-hdfc-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-hdfc-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-hdfc-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-icici-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-icici-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-icici-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-icici-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-amazon-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-amazon-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-amazon-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-amazon-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-esp_acme-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-esp_acme-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-esp_acme-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-esp_acme-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-esp_shop-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-esp_shop-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-esp_shop-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-esp_shop-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-university-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-university-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-university-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-university-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-plain-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-plain-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-plain-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-plain-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-plain2-0.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-plain2-1.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-plain2-2.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "legit-plain2-3.eml": {
+    "expect": "not_suspicious",
+    "category": "legit"
+  },
+  "spoof-forged-auth-0.eml": {
+    "expect": "suspicious",
+    "category": "spoof-forged-auth"
+  },
+  "spoof-display-0.eml": {
+    "expect": "suspicious",
+    "category": "spoof-display"
+  },
+  "spoof-lookalike-0.eml": {
+    "expect": "suspicious",
+    "category": "spoof-lookalike"
+  },
+  "spoof-reply-to-0.eml": {
+    "expect": "suspicious",
+    "category": "spoof-reply-to"
+  },
+  "spoof-attachment-0.eml": {
+    "expect": "suspicious",
+    "category": "spoof-attachment"
+  },
+  "spoof-forged-auth-1.eml": {
+    "expect": "suspicious",
+    "category": "spoof-forged-auth"
+  },
+  "spoof-display-1.eml": {
+    "expect": "suspicious",
+    "category": "spoof-display"
+  },
+  "spoof-lookalike-1.eml": {
+    "expect": "suspicious",
+    "category": "spoof-lookalike"
+  },
+  "spoof-reply-to-1.eml": {
+    "expect": "suspicious",
+    "category": "spoof-reply-to"
+  },
+  "spoof-attachment-1.eml": {
+    "expect": "suspicious",
+    "category": "spoof-attachment"
+  },
+  "spoof-forged-auth-2.eml": {
+    "expect": "suspicious",
+    "category": "spoof-forged-auth"
+  },
+  "spoof-display-2.eml": {
+    "expect": "suspicious",
+    "category": "spoof-display"
+  },
+  "spoof-lookalike-2.eml": {
+    "expect": "suspicious",
+    "category": "spoof-lookalike"
+  },
+  "spoof-reply-to-2.eml": {
+    "expect": "suspicious",
+    "category": "spoof-reply-to"
+  },
+  "spoof-attachment-2.eml": {
+    "expect": "suspicious",
+    "category": "spoof-attachment"
+  },
+  "spoof-forged-auth-3.eml": {
+    "expect": "suspicious",
+    "category": "spoof-forged-auth"
+  },
+  "spoof-display-3.eml": {
+    "expect": "suspicious",
+    "category": "spoof-display"
+  },
+  "spoof-lookalike-3.eml": {
+    "expect": "suspicious",
+    "category": "spoof-lookalike"
+  },
+  "spoof-reply-to-3.eml": {
+    "expect": "suspicious",
+    "category": "spoof-reply-to"
+  },
+  "spoof-attachment-3.eml": {
+    "expect": "suspicious",
+    "category": "spoof-attachment"
+  },
+  "spoof-forged-auth-4.eml": {
+    "expect": "suspicious",
+    "category": "spoof-forged-auth"
+  },
+  "spoof-display-4.eml": {
+    "expect": "suspicious",
+    "category": "spoof-display"
+  },
+  "spoof-lookalike-4.eml": {
+    "expect": "suspicious",
+    "category": "spoof-lookalike"
+  },
+  "spoof-reply-to-4.eml": {
+    "expect": "suspicious",
+    "category": "spoof-reply-to"
+  },
+  "spoof-attachment-4.eml": {
+    "expect": "suspicious",
+    "category": "spoof-attachment"
+  }
+}

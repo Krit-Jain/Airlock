@@ -1,0 +1,7 @@
+From: Alice <alice@example.com>
+Subject: Urgent ref 4
+Authentication-Results: mx.example.com; spf=fail dkim=fail dmarc=fail
+Authentication-Results: evil.test; spf=pass dkim=pass dmarc=pass
+Content-Type: text/plain; charset="utf-8"
+
+Please act now.

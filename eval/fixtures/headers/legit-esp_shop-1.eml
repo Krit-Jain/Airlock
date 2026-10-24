@@ -1,0 +1,7 @@
+From: Shop Deals <deals@shop.example>
+Subject: Sale this weekend (ref 6-1)
+Return-Path: <bounce@esp.example>
+Reply-To: deals@shop.example
+Content-Type: text/plain; charset="utf-8"
+
+Hello, this is a routine message ref 6-1.

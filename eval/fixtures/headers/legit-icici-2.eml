@@ -1,0 +1,6 @@
+From: ICICI Bank <alerts@icicibank.com>
+Subject: Transaction update (ref 3-2)
+Authentication-Results: mx.icicibank.com; spf=pass dkim=pass dmarc=pass
+Content-Type: text/plain; charset="utf-8"
+
+Hello, this is a routine message ref 3-2.

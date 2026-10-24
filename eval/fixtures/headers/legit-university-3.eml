@@ -1,0 +1,6 @@
+From: Registrar <registrar@university.example>
+Subject: Enrollment window (ref 7-3)
+Authentication-Results: mx.university.example; spf=pass dkim=pass dmarc=pass
+Content-Type: text/plain; charset="utf-8"
+
+Hello, this is a routine message ref 7-3.

@@ -1,0 +1,182 @@
+{
+  "display-none-0.html": {
+    "expect_hidden": true
+  },
+  "display-none-1.html": {
+    "expect_hidden": true
+  },
+  "display-none-2.html": {
+    "expect_hidden": true
+  },
+  "visibility-hidden-0.html": {
+    "expect_hidden": true
+  },
+  "visibility-hidden-1.html": {
+    "expect_hidden": true
+  },
+  "visibility-hidden-2.html": {
+    "expect_hidden": true
+  },
+  "font-tiny-0.html": {
+    "expect_hidden": true
+  },
+  "font-tiny-1.html": {
+    "expect_hidden": true
+  },
+  "font-tiny-2.html": {
+    "expect_hidden": true
+  },
+  "font-zero-0.html": {
+    "expect_hidden": true
+  },
+  "font-zero-1.html": {
+    "expect_hidden": true
+  },
+  "font-zero-2.html": {
+    "expect_hidden": true
+  },
+  "max-height-0.html": {
+    "expect_hidden": true
+  },
+  "max-height-1.html": {
+    "expect_hidden": true
+  },
+  "max-height-2.html": {
+    "expect_hidden": true
+  },
+  "text-indent-0.html": {
+    "expect_hidden": true
+  },
+  "text-indent-1.html": {
+    "expect_hidden": true
+  },
+  "text-indent-2.html": {
+    "expect_hidden": true
+  },
+  "clip-0.html": {
+    "expect_hidden": true
+  },
+  "clip-1.html": {
+    "expect_hidden": true
+  },
+  "clip-2.html": {
+    "expect_hidden": true
+  },
+  "white-on-white-0.html": {
+    "expect_hidden": true
+  },
+  "white-on-white-1.html": {
+    "expect_hidden": true
+  },
+  "white-on-white-2.html": {
+    "expect_hidden": true
+  },
+  "opacity-zero-0.html": {
+    "expect_hidden": true
+  },
+  "opacity-zero-1.html": {
+    "expect_hidden": true
+  },
+  "opacity-zero-2.html": {
+    "expect_hidden": true
+  },
+  "aria-hidden-0.html": {
+    "expect_hidden": true
+  },
+  "aria-hidden-1.html": {
+    "expect_hidden": true
+  },
+  "aria-hidden-2.html": {
+    "expect_hidden": true
+  },
+  "opacity-08-0.html": {
+    "expect_hidden": false
+  },
+  "opacity-08-1.html": {
+    "expect_hidden": false
+  },
+  "opacity-08-2.html": {
+    "expect_hidden": false
+  },
+  "font-09em-0.html": {
+    "expect_hidden": false
+  },
+  "font-09em-1.html": {
+    "expect_hidden": false
+  },
+  "font-09em-2.html": {
+    "expect_hidden": false
+  },
+  "font-12px-0.html": {
+    "expect_hidden": false
+  },
+  "font-12px-1.html": {
+    "expect_hidden": false
+  },
+  "font-12px-2.html": {
+    "expect_hidden": false
+  },
+  "font-14px-0.html": {
+    "expect_hidden": false
+  },
+  "font-14px-1.html": {
+    "expect_hidden": false
+  },
+  "font-14px-2.html": {
+    "expect_hidden": false
+  },
+  "colored-0.html": {
+    "expect_hidden": false
+  },
+  "colored-1.html": {
+    "expect_hidden": false
+  },
+  "colored-2.html": {
+    "expect_hidden": false
+  },
+  "preheader-visible-0.html": {
+    "expect_hidden": false
+  },
+  "preheader-visible-1.html": {
+    "expect_hidden": false
+  },
+  "preheader-visible-2.html": {
+    "expect_hidden": false
+  },
+  "opacity-09-0.html": {
+    "expect_hidden": false
+  },
+  "opacity-09-1.html": {
+    "expect_hidden": false
+  },
+  "opacity-09-2.html": {
+    "expect_hidden": false
+  },
+  "max-height-100-0.html": {
+    "expect_hidden": false
+  },
+  "max-height-100-1.html": {
+    "expect_hidden": false
+  },
+  "max-height-100-2.html": {
+    "expect_hidden": false
+  },
+  "indent-positive-0.html": {
+    "expect_hidden": false
+  },
+  "indent-positive-1.html": {
+    "expect_hidden": false
+  },
+  "indent-positive-2.html": {
+    "expect_hidden": false
+  },
+  "font-2px-x-0.html": {
+    "expect_hidden": false
+  },
+  "font-2px-x-1.html": {
+    "expect_hidden": false
+  },
+  "font-2px-x-2.html": {
+    "expect_hidden": false
+  }
+}

@@ -1,0 +1,6 @@
+From: Billing <billing@yourbank.example>
+Reply-To: collect@evil.test
+Subject: Invoice ref 0
+Content-Type: text/plain; charset="utf-8"
+
+Reply to confirm payment.
