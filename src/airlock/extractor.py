@@ -7,12 +7,16 @@ pluggable so the rest of the pipeline runs deterministically without a live mode
 
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import Protocol
 
 from .schema import Category, Extraction, RequestType, Urgency, ollama_schema
 from .segment import labeled_sentences
 from .validate import validate_extraction
+
+# Character cap for a single model input. Messages above this are truncated and flagged.
+MAX_MODEL_INPUT_CHARS = 8000
 
 SYSTEM_PROMPT = (
     "You classify one message into a fixed JSON schema. Return only the JSON object, "
@@ -60,10 +64,10 @@ class OllamaAdapter:
                 {"role": "user", "content": user_prompt},
             ],
             format=ollama_schema(),
+            think=False,
             options={
                 "temperature": 0,
                 "num_ctx": self.num_ctx,
-                "think": False,
             },
         )
         content = response["message"]["content"]
@@ -145,3 +149,23 @@ def run_extraction(adapter: ModelAdapter, sentences: list[str]) -> tuple[Extract
         return extraction, None
     except Exception as exc:  # noqa: BLE001 - deliberately degrade to unparsed
         return None, str(exc)
+
+
+def cap_sentences(sentences: list[str], max_chars: int = MAX_MODEL_INPUT_CHARS) -> tuple[list[str], bool]:
+    """Cap the model input by characters, returning (kept_sentences, truncated)."""
+    total = 0
+    kept: list[str] = []
+    for sentence in sentences:
+        if kept and total + len(sentence) > max_chars:
+            return kept, True
+        kept.append(sentence)
+        total += len(sentence)
+    return kept, False
+
+
+def schema_hash() -> str:
+    return hashlib.sha256(json.dumps(ollama_schema(), sort_keys=True).encode("utf-8")).hexdigest()[:12]
+
+
+def prompt_hash() -> str:
+    return hashlib.sha256(SYSTEM_PROMPT.encode("utf-8")).hexdigest()[:12]

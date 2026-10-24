@@ -70,7 +70,10 @@ class Store:
                 amount_currency TEXT,
                 unparsed INTEGER NOT NULL DEFAULT 0,
                 disputed INTEGER NOT NULL DEFAULT 0,
-                section TEXT NOT NULL
+                section TEXT NOT NULL,
+                model_tag TEXT,
+                schema_hash TEXT,
+                prompt_hash TEXT
             );
 
             CREATE TABLE IF NOT EXISTS proposals (
@@ -92,6 +95,15 @@ class Store:
             """
         )
         self._conn.commit()
+        self._migrate()
+
+    def _migrate(self) -> None:
+        """Add columns introduced after a database was first created."""
+        columns = {row[1] for row in self._conn.execute("PRAGMA table_info(messages)").fetchall()}
+        for name in ("model_tag", "schema_hash", "prompt_hash"):
+            if name not in columns:
+                self._conn.execute(f"ALTER TABLE messages ADD COLUMN {name} TEXT")
+        self._conn.commit()
 
     @_locked
     def close(self) -> None:
@@ -100,6 +112,14 @@ class Store:
     @_locked
     def is_processed(self, message_id: str) -> bool:
         row = self._conn.execute("SELECT 1 FROM messages WHERE id = ?", (message_id,)).fetchone()
+        return row is not None
+
+    @_locked
+    def is_cached(self, message_id: str, model_tag: str, schema_hash: str, prompt_hash: str) -> bool:
+        row = self._conn.execute(
+            "SELECT 1 FROM messages WHERE id = ? AND model_tag = ? AND schema_hash = ? AND prompt_hash = ?",
+            (message_id, model_tag, schema_hash, prompt_hash),
+        ).fetchone()
         return row is not None
 
     @_locked
@@ -153,6 +173,9 @@ class Store:
         section: str,
         unparsed: bool,
         disputed: bool,
+        model_tag: str = "",
+        schema_hash: str = "",
+        prompt_hash: str = "",
     ) -> None:
         self._conn.execute(
             """
@@ -160,8 +183,8 @@ class Store:
                 id, source, sender, ts, raw_text, sanitized_text, sentences, headers,
                 trust, trust_reasons, category, urgency, request_type, asks_user_to_act,
                 evidence, deadline_sentence, amount_sentence, deadline, amount_value,
-                amount_currency, unparsed, disputed, section
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                amount_currency, unparsed, disputed, section, model_tag, schema_hash, prompt_hash
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 message.id,
@@ -187,6 +210,9 @@ class Store:
                 int(unparsed),
                 int(disputed),
                 section,
+                model_tag,
+                schema_hash,
+                prompt_hash,
             ),
         )
         self._conn.commit()

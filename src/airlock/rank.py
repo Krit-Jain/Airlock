@@ -47,13 +47,14 @@ def rank(
     disputed: bool,
     has_deadline: bool,
     has_amount: bool,
+    truncated: bool = False,
 ) -> RankResult:
     if extraction is None:
         return RankResult(urgency=Urgency.NONE, section="review")
 
     urgency = capped_urgency(trust, extraction.urgency)
 
-    if unparsed or trust == TrustLabel.SUSPICIOUS or disputed:
+    if unparsed or trust == TrustLabel.SUSPICIOUS or disputed or truncated:
         return RankResult(urgency=urgency, section="review")
 
     is_request = (

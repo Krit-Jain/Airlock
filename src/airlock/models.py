@@ -32,6 +32,7 @@ class TrustReason(str, Enum):
     FIRST_TIME_SENDER = "first_time_sender"
     UNVERIFIED_CHAT = "unverified_chat"
     MANY_LINKS = "many_links"
+    PART_MISMATCH = "part_mismatch"
 
 
 @dataclass
@@ -47,12 +48,15 @@ class Message:
     sender: str
     ts: datetime | None
     raw_text: str
-    headers: dict[str, str] = field(default_factory=dict)
+    headers: dict[str, list[str]] = field(default_factory=dict)
+    attachments: list[str] = field(default_factory=list)
+    part_mismatch: bool = False
     sanitized_text: str = ""
     sentences: list[str] = field(default_factory=list)
     trust: TrustLabel = TrustLabel.UNKNOWN
     trust_reasons: list[TrustReason] = field(default_factory=list)
     hidden_text_detected: bool = False
+    truncated: bool = False
 
 
 @dataclass
