@@ -1,0 +1,10 @@
+{
+  "n": 20,
+  "model": "gemma3:4b",
+  "schema_valid": 20,
+  "schema_valid_rate": 1.0,
+  "invalid_schema": 0,
+  "not_json": 0,
+  "out_of_vocabulary": 0,
+  "samples": []
+}

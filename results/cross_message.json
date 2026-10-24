@@ -1,0 +1,7 @@
+{
+  "n": 30,
+  "quarantine_model": "mock",
+  "noise_floor": 0,
+  "changed_with_attack": 0,
+  "stable": true
+}
