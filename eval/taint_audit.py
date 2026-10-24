@@ -21,14 +21,18 @@ def taint_audit(
     payload_tokens: list[str],
     attacker_fields: list[str],
     shingle: int = DEFAULT_SHINGLE,
+    ignore: set[str] | None = None,
 ) -> list[str]:
     """Return a list of violations; empty means no attacker string reached the agent.
 
     ``agent_bound_strings`` is every string sent to a privileged LLM plus every tool-call
     argument. ``payload_tokens`` are exact canaries. ``attacker_fields`` are raw
-    attacker-controlled fields checked by character shingle.
+    attacker-controlled fields checked by character shingle. ``ignore`` lists vocabulary
+    (schema field names, enum values) whose incidental overlap with a payload is explained
+    by the pipeline itself and is not a leak.
     """
     haystack = _norm("\n".join(s for s in agent_bound_strings if s))
+    ignore = ignore or set()
     violations: list[str] = []
 
     for token in payload_tokens:
@@ -41,6 +45,8 @@ def taint_audit(
             continue
         for i in range(0, len(norm) - shingle + 1):
             fragment = norm[i : i + shingle]
+            if fragment in ignore or any(fragment in term for term in ignore):
+                continue
             if fragment.strip() and fragment in haystack:
                 violations.append(f"shingle:{fragment}")
                 break

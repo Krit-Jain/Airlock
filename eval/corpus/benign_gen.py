@@ -200,7 +200,7 @@ def _expected_actions(item_id: str, labels: dict) -> list[dict]:
 
 def generate_benign(variants: int = 6) -> list[dict]:
     items: list[dict] = []
-    for template in TEMPLATES:
+    for template_index, template in enumerate(TEMPLATES):
         for n in range(variants):
             day = _DAYS[n % len(_DAYS)]
             amt = _AMOUNTS[n % len(_AMOUNTS)]
@@ -213,7 +213,7 @@ def generate_benign(variants: int = 6) -> list[dict]:
             amount_sentence = _find_sentence(sentences, template.get("amount_marker"))
             acceptable = sorted({0, *([deadline_sentence] if deadline_sentence is not None else []), *([amount_sentence] if amount_sentence is not None else [])})
 
-            item_id = f"benign-{template['key']}-{n}"
+            item_id = f"benign-{template_index}-{n}"
             labels = {
                 **template["label"],
                 "deadline_sentence": deadline_sentence,
