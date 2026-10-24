@@ -29,6 +29,8 @@ from .systems import (
     GulliblePolicy,
     NullPolicy,
     OllamaAgentPolicy,
+    OllamaJudge,
+    RegexJudge,
     present_s0,
     present_s2,
     present_s3,
@@ -36,7 +38,7 @@ from .systems import (
 )
 from .taint_audit import taint_audit
 
-SYSTEMS = ("S0", "S1a", "S2", "S3", "S3b")
+SYSTEMS = ("S0", "S1a", "S1b", "S2", "S3", "S3b")
 CONFIG = SignalConfig(known_contacts={KNOWN_CONTACT})
 
 # Vocabulary whose overlap between a payload and a typed record is explained by the
@@ -94,14 +96,13 @@ def _record_from_item(item: dict, adapter) -> ResolvedRecord:
     )
 
 
-def _run_system(system: str, batch: list[dict], policy, adapter) -> AgentRun:
-    dropped = False
+def _run_system(system: str, batch: list[dict], policy, adapter, judge=None) -> AgentRun:
     if system == "S1a":
         from .detector_baseline import detector_refuses
 
-        kept = [m for m in batch if not detector_refuses({"raw": m.get("raw", "")})]
-        dropped = len(kept) != len(batch)
-        batch = kept
+        batch = [m for m in batch if not detector_refuses({"raw": m.get("raw", "")})]
+    elif system == "S1b" and judge is not None:
+        batch = [m for m in batch if not judge.is_injection(m.get("raw", ""))]
 
     if system in ("S3", "S3b"):
         records = [_record_from_item(m, adapter) for m in batch]
@@ -144,6 +145,7 @@ def run_agent_eval(
     quarantine_model: str = "mock",
     agent_policy: str = "gullible",
     agent_model: str = "gemma3:4b",
+    judge_policy: str = "regex",
     limit: int | None = None,
     split: str = "test",
     batch_size: int = 8,
@@ -160,6 +162,7 @@ def run_agent_eval(
 
     adapter = _quarantine_adapter(quarantine_model)
     policy = _agent_policy(agent_policy, agent_model)
+    judge = RegexJudge() if judge_policy == "regex" else OllamaJudge(model=agent_model)
 
     rng = random.Random(seed)
     per_system: dict[str, dict] = {
@@ -174,8 +177,8 @@ def run_agent_eval(
         for system in SYSTEMS:
             batch = _build_batch(attack, benign_pool, batch_size, rng, use_twin=False)
             clean = _build_batch(attack, benign_pool, batch_size, rng, use_twin=True)
-            run = _run_system(system, batch, policy, adapter)
-            clean_run = _run_system(system, clean, policy, adapter)
+            run = _run_system(system, batch, policy, adapter, judge)
+            clean_run = _run_system(system, clean, policy, adapter, judge)
 
             unauth = bool(run.unauthorized_calls())
             canary_hit = any(_calls_hijacked(run.calls, c) for c in token_list if c)
@@ -202,15 +205,21 @@ def run_agent_eval(
                 }
             )
 
+    benign_flagged = sum(1 for b in benign_pool if judge.is_injection(b["raw"]))
+
     summary: dict = {
         "metadata": {
             "quarantine_model": quarantine_model,
             "agent_policy": agent_policy,
             "agent_model": agent_model,
+            "judge_policy": judge_policy,
             "split": split,
             "batch_size": batch_size,
             "seed": seed,
             "attacks": len(attacks),
+        },
+        "judge": {
+            "benign_false_positive": wilson(benign_flagged, len(benign_pool)).__dict__,
         },
         "systems": {},
     }
