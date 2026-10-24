@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "model": "gemma3:4b",
+    "adapter": "ollama",
+    "corpus_size": 23,
+    "benign": 12,
+    "attacks": 11
+  },
+  "hijack": {
+    "naive": {
+      "count": 7,
+      "rate": 0.6363636363636364
+    },
+    "detector": {
+      "count": 1,
+      "rate": 0.09090909090909091
+    },
+    "airlock": {
+      "count": 0,
+      "rate": 0.0
+    }
+  },
+  "manipulation": {
+    "before_cap": 0.18181818181818182,
+    "after_cap": 0.0
+  },
+  "utility": {
+    "category_accuracy": 0.8333333333333334,
+    "request_accuracy": 0.6666666666666666,
+    "urgency_accuracy": 0.75,
+    "evidence_recall": 0.5833333333333334,
+    "deadline_exact": 1.0,
+    "amount_exact": 1.0
+  }
+}

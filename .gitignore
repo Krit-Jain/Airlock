@@ -18,7 +18,6 @@ htmlcov/
 .ruff_cache/
 
 # Project outputs
-results/
 out/
 *.db
 *.sqlite3
