@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "quarantine_model": "mock",
+    "split": "test",
+    "attacks": 8
+  },
+  "by_sender_variant": {
+    "lookalike": {
+      "n": 1,
+      "flip_category": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.7934567085261071,
+        "k": 0,
+        "n": 1
+      },
+      "flip_request_type": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.7934567085261071,
+        "k": 0,
+        "n": 1
+      },
+      "asks_flip": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.7934567085261071,
+        "k": 0,
+        "n": 1
+      },
+      "urgency_raised_before_cap": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.7934567085261071,
+        "k": 0,
+        "n": 1
+      },
+      "urgency_raised_after_cap": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.7934567085261071,
+        "k": 0,
+        "n": 1
+      },
+      "promotion": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.7934567085261071,
+        "k": 0,
+        "n": 1
+      },
+      "suppression": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.7934567085261071,
+        "k": 0,
+        "n": 1
+      },
+      "review_diversion": {
+        "point": 1.0,
+        "low": 0.20654329147389294,
+        "high": 1.0,
+        "k": 1,
+        "n": 1
+      }
+    },
+    "unknown": {
+      "n": 7,
+      "flip_category": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.35433884297520657,
+        "k": 0,
+        "n": 7
+      },
+      "flip_request_type": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.35433884297520657,
+        "k": 0,
+        "n": 7
+      },
+      "asks_flip": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.35433884297520657,
+        "k": 0,
+        "n": 7
+      },
+      "urgency_raised_before_cap": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.35433884297520657,
+        "k": 0,
+        "n": 7
+      },
+      "urgency_raised_after_cap": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.35433884297520657,
+        "k": 0,
+        "n": 7
+      },
+      "promotion": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.35433884297520657,
+        "k": 0,
+        "n": 7
+      },
+      "suppression": {
+        "point": 0.14285714285714285,
+        "low": 0.02567895594897479,
+        "high": 0.51313450331903,
+        "k": 1,
+        "n": 7
+      },
+      "review_diversion": {
+        "point": 0.2857142857142857,
+        "low": 0.0822171657090155,
+        "high": 0.6410709098517873,
+        "k": 2,
+        "n": 7
+      }
+    }
+  }
+}

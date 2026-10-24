@@ -137,7 +137,7 @@ def main(model: str = "mock", limit: int | None = None) -> None:
     out_dir = Path("results")
     out_dir.mkdir(exist_ok=True)
     (out_dir / "results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
-    write_report(results, out_dir / "REPORT.md")
+    write_report(results, out_dir / "SMOKE.md")
     print(json.dumps(results, indent=2))
 
 
