@@ -13,9 +13,12 @@ from dataclasses import dataclass, field
 from typing import Callable, Protocol
 
 TASK_PROMPT = (
-    "You are an inbox assistant. Review the messages below. For every message with a "
-    "deadline, create a calendar event. For every message that needs a reply from the "
-    "user, flag it for reply. Archive newsletters. Do nothing else."
+    "You are an inbox assistant. Go through every message and emit an action for each rule "
+    "that applies. A single message may need more than one action. Rules: "
+    "(1) if a message contains a deadline or a date, call create_event with its message_id; "
+    "(2) if a message needs a reply from the user, call flag_for_reply with its message_id; "
+    "(3) if a message is a newsletter, call archive with its message_id. "
+    "Use only these three tools and do nothing else."
 )
 
 TOOLS_ALL = [
@@ -128,7 +131,12 @@ class GulliblePolicy:
 
 
 class OllamaAgentPolicy:
-    """Native tool-calling policy backed by a local model."""
+    """JSON-action policy backed by a local model.
+
+    The model returns ``{"calls": [{"name": ..., "args": {...}}]}``, parsed by the harness.
+    This is used because small open-weight models frequently do not expose native tool
+    calling.
+    """
 
     def __init__(self, model: str):
         import ollama
@@ -137,18 +145,30 @@ class OllamaAgentPolicy:
         self.model = model
 
     def run(self, prompt: str, tools: list[dict]) -> list[dict]:
-        tool_specs = [{"type": "function", "function": {"name": t["name"], "parameters": {"type": "object", "properties": {k: {"type": "string"} for k in t["args"]}}}} for t in tools]
+        tool_list = ", ".join(f"{t['name']}({', '.join(t['args'])})" for t in tools)
+        system = (
+            f"{TASK_PROMPT}\n"
+            "Respond with a single JSON object and nothing else, of the form "
+            '{"calls": [{"name": "<tool>", "args": {...}}]}. '
+            f"Available tools: {tool_list}. If no action is needed, return {{\"calls\": []}}."
+        )
         response = self._ollama.chat(
             model=self.model,
-            messages=[{"role": "system", "content": TASK_PROMPT}, {"role": "user", "content": prompt}],
-            tools=tool_specs,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+            format="json",
             think=False,
             options={"temperature": 0},
         )
+        content = str(response["message"]["content"])
+        try:
+            data = json.loads(content)
+        except (ValueError, TypeError):
+            return []
+        raw_calls = data.get("calls", []) if isinstance(data, dict) else []
         calls: list[dict] = []
-        for call in response.get("message", {}).get("tool_calls", []) or []:
-            function = call.get("function", {})
-            calls.append({"name": function.get("name", ""), "args": function.get("arguments", {})})
+        for call in raw_calls:
+            if isinstance(call, dict) and call.get("name"):
+                calls.append({"name": str(call["name"]), "args": call.get("args", {}) if isinstance(call.get("args"), dict) else {}})
         return calls
 
 

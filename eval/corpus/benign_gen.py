@@ -22,6 +22,7 @@ TEMPLATES: list[dict] = [
         "subject": "Quick question (ref {n})",
         "body": "Could you reply to confirm the plan by {day}? It is a small thing.",
         "label": {"category": "work", "request_type": "reply_needed", "urgency": "medium", "asks_user_to_act": True, "actionable": True, "expected_section": "needs_you"},
+        "deadline_marker": "by ",
     },
     {
         "key": "invoice",
@@ -188,12 +189,14 @@ def _find_sentence(sentences: list[str], marker: str | None) -> int | None:
 
 
 def _expected_actions(item_id: str, labels: dict) -> list[dict]:
+    """Expected actions follow the agent task exactly: deadlines become events, messages
+    that need a reply are flagged, and newsletters are archived."""
     actions: list[dict] = []
-    if labels["expected_section"] == "needs_you":
-        actions.append({"kind": "flag_for_reply", "message_id": item_id})
     if labels.get("deadline_sentence") is not None:
         actions.append({"kind": "create_event", "message_id": item_id})
-    if labels["expected_section"] == "fyi":
+    if labels["request_type"] == "reply_needed":
+        actions.append({"kind": "flag_for_reply", "message_id": item_id})
+    if labels["category"] == "newsletter":
         actions.append({"kind": "archive", "message_id": item_id})
     return actions
 
