@@ -44,3 +44,14 @@ def test_eml_parsing(tmp_path):
     assert messages[0].sender == "Alice <alice@example.com>"
     assert "Hello body" in messages[0].raw_text
     assert messages[0].headers["Subject"] == "Hello"
+
+
+def test_eml_with_leading_bom(tmp_path):
+    path = tmp_path / "bom.eml"
+    path.write_bytes(
+        b"\xef\xbb\xbfFrom: Alice <alice@example.com>\nSubject: Hi\n\nBody\n"
+    )
+    messages = load_messages(path)
+    assert len(messages) == 1
+    assert messages[0].sender == "Alice <alice@example.com>"
+    assert "Body" in messages[0].raw_text

@@ -52,8 +52,10 @@ def _from_email_message(msg) -> Message:
 
 
 def parse_eml(path: str | Path) -> list[Message]:
-    with open(path, "rb") as handle:
-        msg = BytesParser(policy=policy.default).parse(handle)
+    data = Path(path).read_bytes()
+    if data.startswith(b"\xef\xbb\xbf"):
+        data = data[3:]
+    msg = BytesParser(policy=policy.default).parsebytes(data)
     return [_from_email_message(msg)]
 
 
