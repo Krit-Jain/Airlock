@@ -29,5 +29,7 @@ uv run airlock eval
 
 ## Commit style
 
-Write professional, imperative commit messages. Do not include tooling or agent names in
-commit messages or in any file committed to the repository.
+Follow Conventional Commits: `feat`, `fix`, `docs`, `test`, `chore`, `refactor`, or `perf`
+with an optional scope, an imperative summary, and a body explaining why. Wrap body lines at
+72 columns. Do not include tooling or agent names in commit messages or in any file
+committed to the repository.

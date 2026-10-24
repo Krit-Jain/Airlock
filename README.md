@@ -1,5 +1,9 @@
 # Airlock
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](#quick-start)
+[![CI](https://github.com/Krit-Jain/Airlock/actions/workflows/ci.yml/badge.svg)](https://github.com/Krit-Jain/Airlock/actions/workflows/ci.yml)
+
 **Sleep while it reads your inbox.**
 
 Airlock reads your untrusted email and WhatsApp exports overnight and produces a morning
@@ -8,6 +12,26 @@ pointing; deterministic code does the reading. The result is a local, fully offl
 triage that cannot be prompt-injected into acting on an attacker's instructions.
 
 **The model points. Code reads.**
+
+## How it works
+
+```mermaid
+flowchart TD
+    A[Raw inbox: .mbox, .eml, WhatsApp .txt] --> B[Ingest]
+    B --> C[Sanitize and flag hidden content]
+    C --> D[Compute trust signals]
+    D --> E[Split into numbered sentences]
+    E --> F[Quarantined model: enums + sentence ids only]
+    F --> G[Validate against schema]
+    G --> H[Resolve quotes, dates, amounts]
+    H --> I[Rank with trust cap]
+    I --> J[HTML brief]
+    I --> K[SQLite store]
+    I --> L[MCP server]
+```
+
+The quarantined model only ever points at what it saw. Every piece of text, every
+date, every amount, and every trust decision is produced by deterministic code.
 
 ## What it does
 
