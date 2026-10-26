@@ -159,6 +159,12 @@ def eval(
     skip: str = typer.Option("", help="Comma-separated stages to skip."),
 ) -> None:
     """Run the full evaluation harness and regenerate the report."""
+    import sys
+    from pathlib import Path
+
+    for candidate in (Path.cwd(), Path(__file__).resolve().parents[2]):
+        if (candidate / "eval").is_dir() and str(candidate) not in sys.path:
+            sys.path.insert(0, str(candidate))
     from eval.run_all import run_all
 
     skip_stages = tuple(stage.strip() for stage in skip.split(",") if stage.strip())

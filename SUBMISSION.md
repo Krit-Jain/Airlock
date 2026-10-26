@@ -32,7 +32,7 @@ Hacktoberfest Open-Source AI Challenge, Week 3: Slow and Steady.
 
 ## Optional
 
-- [ ] Demo video (no video is required; a link or screenshot is recommended).
+- [x] Demo video at `docs/demo.mp4` (2:44, narrated); upload it to DEV when publishing.
 - [ ] Agent session embed via DevRelay (optional; requires the MLH connection).
 - [ ] Sentry traces: `src/airlock/tracing.py` implements span helpers, but no Sentry run
       with a DSN was captured, so the Sentry track is not claimed.

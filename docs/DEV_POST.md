@@ -45,7 +45,8 @@ The brief has four sections: Needs you, Deadlines and amounts, Review carefully,
 Quotes are labeled untrusted and shown only to you; links are defanged to plain text. The
 quarantine model has no free-text output field, so a message can tell you anything but
 cannot make the model say anything. A generated example brief is committed at
-`docs/demo-brief.html`.
+`docs/demo-brief.html`, and a narrated walkthrough is at `docs/demo.mp4` (upload it to DEV
+when publishing).
 
 ## Code
 

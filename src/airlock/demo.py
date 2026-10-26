@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import webbrowser
 from pathlib import Path
 
@@ -16,6 +17,22 @@ from .signals import SignalConfig
 from .store import Store
 
 console = Console()
+
+_EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
+_URL_RE = re.compile(r"https?://[^\s\"'<>]+")
+_IMPERATIVE_RE = re.compile(r"\b(forward|send|share|exfiltrate|open|download|install|click)\b", re.IGNORECASE)
+
+
+def _naive_calls(raw: str) -> list[dict]:
+    """What a gullible flat-context agent would do with this message."""
+    calls: list[dict] = []
+    if _IMPERATIVE_RE.search(raw):
+        calls.append({"name": "forward_email"})
+    for _ in sorted(set(_EMAIL_RE.findall(raw))):
+        calls.append({"name": "forward_email"})
+    for _ in sorted(set(_URL_RE.findall(raw))):
+        calls.append({"name": "fetch_url"})
+    return calls
 
 
 def _demo_messages() -> list[Message]:
@@ -70,9 +87,7 @@ def run_demo(model: str, db: str) -> None:
         table.add_column("Airlock section")
 
         for message, record in zip(messages, records):
-            from eval.naive_agent import naive_tool_calls
-
-            calls = naive_tool_calls({"raw": message.raw_text})
+            calls = _naive_calls(message.raw_text)
             naive = ", ".join(c["name"] for c in calls) if calls else "none"
             section = "review" if record.unparsed else _section(store, message.id)
             table.add_row(message.id, naive, section)
@@ -85,7 +100,10 @@ def run_demo(model: str, db: str) -> None:
 
         path = render_brief(store, "brief.html")
         console.print(f"Wrote brief to [bold]{path}[/bold].")
-        webbrowser.open(Path(path).resolve().as_uri())
+        try:
+            webbrowser.open(Path(path).resolve().as_uri())
+        except Exception:
+            pass
     finally:
         store.close()
 
